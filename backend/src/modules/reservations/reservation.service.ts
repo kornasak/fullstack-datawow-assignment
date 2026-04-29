@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -112,7 +113,7 @@ export class ReservationService {
     });
 
     if (existing && existing.status === 'RESERVED') {
-      throw new BadRequestException('Already reserved');
+      throw new ConflictException('Already reserved');
     }
 
     const reservedCount = await this.prisma.reservation.count({
