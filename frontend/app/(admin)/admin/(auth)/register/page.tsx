@@ -1,18 +1,64 @@
+"use client";
+
+import { register } from "@/api/auth.api";
 import { AuthInput } from "@/components/forms/AuthInput";
+import { getErrorMessage } from "@/helper/axios";
+import {
+  RegisterAdminForm,
+  registerAdminSchema,
+} from "@/schemas/admin/register.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 export default function AdminRegisterPage() {
+  const router = useRouter();
+
+  const {
+    register: registerField,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterAdminForm>({
+    resolver: zodResolver(registerAdminSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = async (values: RegisterAdminForm) => {
+    try {
+      const response = await register({
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        role: "ADMIN",
+      });
+
+      toast.success(response.message);
+      router.push("/admin/login");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
   return (
     <>
       <h2 className="mb-10 text-center text-[32px] font-bold text-black">
         Sign Up
       </h2>
 
-      <form className="space-y-6">
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <AuthInput
           label="Full name"
           placeholder="Enter your Full Name"
           icon="user"
+          error={errors.fullName?.message}
+          {...registerField("fullName")}
         />
 
         <AuthInput
@@ -20,6 +66,8 @@ export default function AdminRegisterPage() {
           type="email"
           placeholder="Enter your Email Address"
           icon="email"
+          error={errors.email?.message}
+          {...registerField("email")}
         />
 
         <AuthInput
@@ -27,6 +75,8 @@ export default function AdminRegisterPage() {
           type="password"
           placeholder="Create a Password"
           icon="lock"
+          error={errors.password?.message}
+          {...registerField("password")}
         />
 
         <AuthInput
@@ -34,10 +84,16 @@ export default function AdminRegisterPage() {
           type="password"
           placeholder="Re-enter your Password"
           icon="lock"
+          error={errors.confirmPassword?.message}
+          {...registerField("confirmPassword")}
         />
 
-        <button className="h-12 w-full bg-[#2196e8] text-white font-bold rounded">
-          Create an account
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="h-12 w-full bg-[#2196e8] text-white font-bold rounded"
+        >
+          {isSubmitting ? "Creating..." : "Create an account"}
         </button>
       </form>
 

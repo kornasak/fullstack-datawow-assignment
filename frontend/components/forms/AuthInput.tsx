@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { forwardRef, useState, type InputHTMLAttributes } from "react";
 import { LuEye, LuEyeOff, LuLockKeyhole, LuMail, LuUser } from "react-icons/lu";
 
 type AuthIcon = "user" | "email" | "lock";
@@ -11,68 +11,74 @@ const iconMap = {
   lock: LuLockKeyhole,
 };
 
-type Props = {
+type Props = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
-  type?: "text" | "email" | "password";
-  placeholder?: string;
   icon?: AuthIcon;
   error?: string;
-  name?: string;
 };
 
-export function AuthInput({
-  label,
-  type = "text",
-  placeholder,
-  icon,
-  error,
-  name,
-}: Props) {
-  const [showPassword, setShowPassword] = useState(false);
+export const AuthInput = forwardRef<HTMLInputElement, Props>(
+  (
+    {
+      label,
+      type = "text",
+      placeholder,
+      icon,
+      error,
+      className,
+      ...inputProps
+    },
+    ref,
+  ) => {
+    const [showPassword, setShowPassword] = useState(false);
 
-  const isPassword = type === "password";
-  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+    const isPassword = type === "password";
+    const inputType = isPassword ? (showPassword ? "text" : "password") : type;
 
-  const Icon = icon ? iconMap[icon] : null;
+    const Icon = icon ? iconMap[icon] : null;
 
-  return (
-    <div>
-      <label className="mb-3 block text-[18px] font-medium text-black">
-        {label}
-      </label>
+    return (
+      <div>
+        <label className="mb-3 block text-[18px] font-medium text-black">
+          {label}
+        </label>
 
-      <div
-        className={`flex h-11.5 items-center rounded border px-3 transition ${
-          error
-            ? "border-red-500"
-            : "border-[#9b9b9b] focus-within:border-[#057ba7]"
-        }`}
-      >
-        {Icon && <Icon className="mr-3 text-[20px] text-black" />}
+        <div
+          className={`flex h-11.5 items-center rounded border px-3 transition ${
+            error
+              ? "border-red-500"
+              : "border-[#9b9b9b] focus-within:border-[#057ba7]"
+          }`}
+        >
+          {Icon && <Icon className="mr-3 shrink-0 text-[20px] text-black" />}
 
-        <input
-          name={name}
-          type={inputType}
-          placeholder={placeholder}
-          className="h-full w-full bg-transparent text-[14px] text-black outline-none placeholder:text-[#b7b7b7]"
-        />
+          <input
+            ref={ref}
+            type={inputType}
+            placeholder={placeholder}
+            className={`h-full w-full bg-transparent text-[14px] text-black outline-none placeholder:text-[#b7b7b7] ${className ?? ""}`}
+            {...inputProps}
+          />
 
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="ml-3 text-black"
-          >
-            {showPassword ? (
-              <LuEye className="text-[18px]" />
-            ) : (
-              <LuEyeOff className="text-[18px]" />
-            )}
-          </button>
-        )}
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="ml-3 shrink-0 text-black"
+            >
+              {showPassword ? (
+                <LuEye className="text-[18px]" />
+              ) : (
+                <LuEyeOff className="text-[18px]" />
+              )}
+            </button>
+          )}
+        </div>
+
+        {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       </div>
+    );
+  },
+);
 
-      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-    </div>
-  );
-}
+AuthInput.displayName = "AuthInput";

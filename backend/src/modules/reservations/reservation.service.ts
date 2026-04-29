@@ -5,35 +5,69 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  GetAllHistoryDto,
+  GetAllHistoryResponse,
+} from 'src/modules/reservations/dto/get-all-history.dto';
 
 @Injectable()
 export class ReservationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAllHistory() {
-    return this.prisma.reservation.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
+  async findAllHistory(
+    query: GetAllHistoryDto,
+  ): Promise<GetAllHistoryResponse> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.reservation.findMany({
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              role: true,
+            },
+          },
+          concert: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              totalSeats: true,
+            },
           },
         },
-        concert: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            totalSeats: true,
-          },
-        },
+      }),
+      this.prisma.reservation.count(),
+    ]);
+
+    return {
+      items: items.map((reservation) => ({
+        id: reservation.id,
+        status: reservation.status,
+        action: reservation.status === 'CANCELLED' ? 'Cancel' : 'Reserve',
+        createdAt: reservation.createdAt,
+        updatedAt: reservation.updatedAt,
+        user: reservation.user,
+        concert: reservation.concert,
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
-    });
+    };
   }
 
   findMyHistory(userId: number) {
@@ -44,12 +78,14 @@ export class ReservationService {
       orderBy: {
         createdAt: 'desc',
       },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
         concert: {
           select: {
             id: true,
             name: true,
-            description: true,
             totalSeats: true,
           },
         },
@@ -124,6 +160,10 @@ export class ReservationService {
 
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
+    }
+
+    if (reservation.status === 'CANCELLED') {
+      throw new BadRequestException('Reservation already cancelled');
     }
 
     return this.prisma.reservation.update({

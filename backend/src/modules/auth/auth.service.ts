@@ -3,20 +3,22 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterDto, RegisterResponse } from './dto/register.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, LoginResponse } from './dto/login.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<RegisterResponse> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -49,7 +51,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<LoginResponse> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -72,7 +74,7 @@ export class AuthService {
     };
 
     const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: process.env.JWT_EXPIRES_IN ?? '1d',
+      expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '1d',
     } as JwtSignOptions);
 
     return {

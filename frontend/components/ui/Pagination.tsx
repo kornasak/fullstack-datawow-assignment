@@ -51,10 +51,7 @@ export function Pagination({
 
           <select
             value={pageSize}
-            onChange={(e) => {
-              onPageSizeChange(Number(e.target.value));
-              onPageChange(1);
-            }}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
             className="h-8 rounded border border-gray-300 bg-white px-2 text-sm text-black outline-none"
           >
             {pageSizeOptions.map((size) => (
@@ -133,10 +130,7 @@ export function Pagination({
 
         <select
           value={pageSize}
-          onChange={(e) => {
-            onPageSizeChange(Number(e.target.value));
-            onPageChange(1);
-          }}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
           className="h-10 min-w-20 rounded-md border border-blue-500 bg-white px-3 text-center text-sm font-medium text-blue-500 outline-none"
         >
           {pageSizeOptions.map((size) => (

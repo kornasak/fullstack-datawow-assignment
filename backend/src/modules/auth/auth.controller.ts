@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { LoginDto } from '../auth/dto/login.dto';
-import { RegisterDto } from '../auth/dto/register.dto';
-import { AuthService } from '../auth/auth.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { LoginDto, LoginResponse } from './dto/login.dto';
+import { RegisterDto, RegisterResponse } from './dto/register.dto';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
+import { ApiBearerAuth, ApiCreatedResponse } from '@nestjs/swagger';
 import type { RequestUser, RequestWithUser } from '../../common/types/request';
 
 @Controller('auths')
@@ -13,12 +13,14 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
+  @ApiCreatedResponse({ type: RegisterResponse })
+  register(@Body() dto: RegisterDto): Promise<RegisterResponse> {
     return this.authService.register(dto);
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
+  @ApiCreatedResponse({ type: LoginResponse })
+  login(@Body() dto: LoginDto): Promise<LoginResponse> {
     return this.authService.login(dto);
   }
 

@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LuLogOut } from "react-icons/lu";
 
 import { userSidebarRoutes } from "@/config/aside-routes";
+import { isTokenValid, logout } from "@/lib/auth";
+import { useEffect } from "react";
 
 export default function UserDashboardLayout({
   children,
@@ -12,6 +14,25 @@ export default function UserDashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const desktopNavItemClass =
+    "grid h-16 w-full grid-cols-[24px_1fr] items-center gap-3 px-5 text-left text-[20px] text-black transition cursor-pointer";
+
+  const mobileNavItemClass =
+    "flex h-full w-full flex-col items-center justify-center gap-1 text-[13px] transition cursor-pointer";
+
+  const handleLogout = (path?: string) => {
+    logout();
+    router.replace(path || "/");
+  };
+
+  useEffect(() => {
+    if (!isTokenValid()) {
+      logout();
+      router.replace("/");
+    }
+  }, [router]);
 
   return (
     <main className="min-h-screen bg-[#f6f6f6] lg:grid lg:grid-cols-[240px_1fr] lg:items-start">
@@ -28,29 +49,46 @@ export default function UserDashboardLayout({
             const Icon = item.icon;
             const active = pathname === item.href;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`grid h-16 grid-cols-[24px_1fr] items-center gap-3 px-5 text-[20px] text-black transition ${
-                  active ? "bg-[#e6f3f8]" : "hover:bg-gray-100"
-                }`}
-              >
-                <Icon className="text-[20px]" />
-                <span>{item.label}</span>
-              </Link>
-            );
+            if (item.label === "Switch to Admin") {
+              return (
+                <button
+                  key={`btn-${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                  type="button"
+                  onClick={() => handleLogout('/admin/login')}
+                  className={`${desktopNavItemClass} ${
+                    active ? "bg-[#e6f3f8]" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon className="text-[20px]" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            } else {
+              return (
+                <Link
+                  key={`btn-${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                  href={item.href}
+                  className={`${desktopNavItemClass} ${
+                    active ? "bg-[#e6f3f8]" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon className="text-[20px]" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            }
           })}
         </nav>
 
         <div className="pb-14">
-          <Link
-            href="/"
-            className="grid h-12 grid-cols-[24px_1fr] items-center gap-3 px-5 text-[20px] text-black transition hover:bg-gray-100"
+          <button
+            type="button"
+            onClick={() => handleLogout()}
+            className={`${desktopNavItemClass} hover:bg-gray-100`}
           >
             <LuLogOut className="text-[20px]" />
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -65,27 +103,44 @@ export default function UserDashboardLayout({
           const Icon = item.icon;
           const active = pathname === item.href;
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center justify-center gap-1 text-[13px] transition ${
-                active ? "text-[#1e88e5]" : "text-gray-400"
-              }`}
-            >
-              <Icon className="text-[26px]" />
-              <span>{item.label}</span>
-            </Link>
-          );
+          if (item.label === "Switch to Admin") {
+            return (
+              <button
+                key={`btn-${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                type="button"
+                onClick={() => handleLogout('/admin/login')}
+                className={`${mobileNavItemClass} ${
+                  active ? "text-[#1e88e5]" : "text-gray-400"
+                }`}
+              >
+                <Icon className="text-[26px]" />
+                <span>{item.label}</span>
+              </button>
+            );
+          } else {
+            return (
+              <Link
+                key={`btn-${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                href={item.href}
+                className={`${mobileNavItemClass} ${
+                  active ? "text-[#1e88e5]" : "text-gray-400"
+                }`}
+              >
+                <Icon className="text-[26px]" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          }
         })}
 
-        <Link
-          href="/"
-          className="flex flex-col items-center justify-center gap-1 text-[13px] text-gray-400 transition hover:text-[#ff3b3b]"
+        <button
+          type="button"
+          onClick={() => handleLogout()}
+          className={`${mobileNavItemClass} text-gray-400`}
         >
           <LuLogOut className="text-[26px]" />
           <span>Logout</span>
-        </Link>
+        </button>
       </nav>
     </main>
   );

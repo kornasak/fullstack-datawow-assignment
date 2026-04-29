@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { LuLogOut, LuMenu, LuX } from "react-icons/lu";
 
 import { adminSidebarRoutes } from "@/config/aside-routes";
+import { isTokenValid, logout } from "@/lib/auth";
 
 export default function AdminDashboardLayout({
   children,
@@ -13,10 +14,27 @@ export default function AdminDashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
   const [open, setOpen] = useState(false);
 
+  const desktopNavItemClass =
+    "grid h-16 w-full grid-cols-[24px_1fr] items-center gap-3 px-5 text-left text-[20px] text-black transition cursor-pointer";
+
+  const handleLogout = (path?: string) => {
+    logout();
+    router.replace(path || "/");
+  };
+
+  useEffect(() => {
+    if (!isTokenValid()) {
+      logout();
+      router.replace("/");
+    }
+  }, [router]);
+
   return (
-    <main className="min-h-screen bg-[#f6f6f6] lg:grid lg:grid-cols-[240px_1fr]">
+    <main className="min-h-screen bg-[#f6f6f6] lg:grid lg:grid-cols-[240px_1fr] lg:items-start">
       {/* Mobile Header */}
       <header className="sticky top-0 z-40 flex h-13 items-center justify-between border-b border-[#e5e5e5] bg-white pl-4 lg:hidden">
         <h1 className="text-[18px] font-bold text-black">Admin</h1>
@@ -31,7 +49,7 @@ export default function AdminDashboardLayout({
       </header>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden min-h-screen grid-rows-[auto_1fr_auto] border-r border-[#e5e5e5] bg-white lg:grid">
+      <aside className="sticky top-0 hidden h-screen grid-rows-[auto_1fr_auto] border-r border-[#e5e5e5] bg-white lg:grid">
         <div className="px-5 pb-6 pt-14">
           <h1 className="text-[32px] font-bold leading-none text-black">
             Admin
@@ -47,29 +65,46 @@ export default function AdminDashboardLayout({
                 pathname.startsWith(pattern),
               );
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`grid h-16 grid-cols-[24px_1fr] items-center gap-3 px-5 text-[20px] text-black transition ${
-                  active ? "bg-[#eaf5f9]" : "hover:bg-gray-100"
-                }`}
-              >
-                <Icon className="text-[20px]" />
-                <span>{item.label}</span>
-              </Link>
-            );
+            if (item.label === "Switch to user") {
+              return (
+                <button
+                  key={`btn-${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                  type="button"
+                  onClick={() => handleLogout("/user/login")}
+                  className={`${desktopNavItemClass} ${
+                    active ? "bg-[#e6f3f8]" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon className="text-[20px]" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            } else {
+              return (
+                <Link
+                  key={`btn-${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                  href={item.href}
+                  className={`${desktopNavItemClass} ${
+                    active ? "bg-[#e6f3f8]" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <Icon className="text-[20px]" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            }
           })}
         </nav>
 
         <div className="pb-14">
-          <Link
-            href="/"
-            className="grid h-12 grid-cols-[24px_1fr] items-center gap-3 px-5 text-[20px] text-black transition hover:bg-gray-100"
+          <button
+            type="button"
+            onClick={() => handleLogout()}
+            className={`${desktopNavItemClass} hover:bg-gray-100`}
           >
             <LuLogOut className="text-[20px]" />
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -105,30 +140,47 @@ export default function AdminDashboardLayout({
                     pathname.startsWith(pattern),
                   );
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className={`grid h-14 grid-cols-[24px_1fr] items-center gap-3 px-5 text-[18px] text-black transition ${
-                      active ? "bg-[#eaf5f9]" : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <Icon className="text-[20px]" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
+                if (item.label === "Switch to user") {
+                  return (
+                    <button
+                      key={`btn-${item.label.toLowerCase().replaceAll(" ", "-")}`}
+                      type="button"
+                      onClick={() => handleLogout("/user/login")}
+                      className={`${desktopNavItemClass} ${
+                        active && "bg-[#e6f3f8]"
+                      }`}
+                    >
+                      <Icon className="text-[20px]" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                } else {
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={`${desktopNavItemClass} ${
+                        active && "bg-[#eaf5f9]"
+                      }`}
+                    >
+                      <Icon className="text-[20px]" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                }
               })}
             </nav>
 
             <div className="pb-8">
-              <Link
-                href="/"
-                className="grid h-12 grid-cols-[24px_1fr] items-center gap-3 px-5 text-[18px] text-black transition hover:bg-gray-100"
+              <button
+                type="button"
+                onClick={() => handleLogout()}
+                className={desktopNavItemClass}
               >
                 <LuLogOut className="text-[20px]" />
                 <span>Logout</span>
-              </Link>
+              </button>
             </div>
           </aside>
         </div>
