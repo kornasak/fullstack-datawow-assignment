@@ -5,18 +5,8 @@ import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import type { Request } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-
-type AuthUser = {
-  id: number;
-  email: string;
-  role: 'ADMIN' | 'USER';
-};
-
-type RequestWithUser = Request & {
-  user: AuthUser;
-};
+import type { RequestUser, RequestWithUser } from '../../common/types/request';
 
 @Controller('auths')
 export class AuthController {
@@ -35,7 +25,7 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard)
-  me(@Req() req: RequestWithUser): AuthUser {
+  me(@Req() req: RequestWithUser): RequestUser {
     return req.user;
   }
 

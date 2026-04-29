@@ -3,10 +3,10 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { RegisterDto } from '../auth/dto/register.dto';
+import { RegisterDto } from './dto/register.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from '../auth/dto/login.dto';
+import { LoginDto } from './dto/login.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 
 @Injectable()
@@ -66,7 +66,7 @@ export class AuthService {
 
     const payload = {
       sub: user.id,
-      firstName: user.fullName,
+      fullName: user.fullName,
       email: user.email,
       role: user.role,
     };
